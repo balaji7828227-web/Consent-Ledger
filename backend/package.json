@@ -1,0 +1,24 @@
+{
+  "name": "consent-ledger-backend",
+  "version": "1.0.0",
+  "description": "Backend server for Consent Ledger Chrome Extension",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "consent-ledger",
+    "privacy",
+    "chrome-extension",
+    "express"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongodb": "^7.6.0"
+  }
+}
