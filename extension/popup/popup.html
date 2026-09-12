@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consent Ledger</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Main Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="shield-icon">🛡</div>
+        <div class="brand-text">
+          <h1>CONSENT LEDGER</h1>
+          <span class="brand-tagline">Privacy & Consent Verification</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Website Indicator -->
+    <section class="website-section">
+      <span class="label">Website:</span>
+      <span class="website-value" id="currentWebsite">Loading...</span>
+    </section>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Privacy Trust Score Card -->
+      <section class="card score-card">
+        <div class="card-header">
+          <span class="card-title">PRIVACY TRUST SCORE</span>
+          <span class="risk-badge badge-low" id="riskLevelBadge">LOW RISK</span>
+        </div>
+        <div class="score-display">
+          <div class="score-number-group">
+            <span class="score-number" id="trustScoreValue">100</span>
+            <span class="score-total">/ 100</span>
+          </div>
+          <div class="score-meter-bar">
+            <div class="score-meter-fill fill-low" id="scoreMeterFill" style="width: 100%;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Consent Status Card -->
+      <section class="card status-card">
+        <div class="card-header">
+          <span class="card-title">CONSENT STATUS</span>
+        </div>
+        <div class="status-content">
+          <span class="status-badge status-unknown" id="consentStatusBadge">UNKNOWN</span>
+          <span class="interface-subtext" id="interfaceStateText">Scanning consent interface...</span>
+        </div>
+      </section>
+
+      <!-- Activity Metrics Grid -->
+      <section class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Trackers Found</span>
+          <span class="metric-value" id="trackersCount">0</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Potential Violations</span>
+          <span class="metric-value text-red" id="violationsCount">0</span>
+        </div>
+      </section>
+
+      <!-- Latest Alert Card -->
+      <section class="card alert-card">
+        <div class="card-header">
+          <span class="card-title">LATEST ALERT</span>
+          <span class="alert-status-pill" id="latestAlertStatus">No Alerts</span>
+        </div>
+        <div class="alert-body" id="alertBody">
+          <div class="alert-row">
+            <span class="alert-label">Type:</span>
+            <span class="alert-value code-font" id="latestAlertType">—</span>
+          </div>
+          <div class="alert-row">
+            <span class="alert-label">Tracker:</span>
+            <span class="alert-value code-font" id="latestAlertTracker">—</span>
+          </div>
+          <div class="alert-details" id="latestAlertDetails">
+            No suspicious tracking activity recorded for this session.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Actions Toolbar -->
+    <footer class="actions-footer">
+      <button class="btn btn-primary" id="btnViewEvidence">
+        <span class="btn-icon">📋</span> View Evidence
+      </button>
+      <button class="btn btn-secondary" id="btnViewTimeline">
+        <span class="btn-icon">⏱</span> Timeline
+      </button>
+      <div class="btn-group-row">
+        <button class="btn btn-tertiary" id="btnRefresh" title="Refresh Analysis">
+          <span class="btn-icon">🔄</span> Refresh Analysis
+        </button>
+        <button class="btn btn-danger" id="btnClearData" title="Clear Website Data">
+          <span class="btn-icon">🗑</span> Clear Website Data
+        </button>
+      </div>
+    </footer>
+
+    <!-- Evidence Modal View -->
+    <div class="modal-overlay hidden" id="evidenceModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <h3>Evidence Ledger</h3>
+            <span class="modal-subtitle">SHA-256 Verified Audit Trail</span>
+          </div>
+          <button class="btn-close" id="btnCloseEvidence">&times;</button>
+        </div>
+        <div class="modal-body" id="evidenceList">
+          <!-- Populated dynamically by popup.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline Modal View -->
+    <div class="modal-overlay hidden" id="timelineModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <h3>Event Timeline</h3>
+            <span class="modal-subtitle">Chronological Session Log</span>
+          </div>
+          <button class="btn-close" id="btnCloseTimeline">&times;</button>
+        </div>
+        <div class="modal-body" id="timelineList">
+          <!-- Populated dynamically by popup.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Toast Notification -->
+    <div class="toast hidden" id="statusToast"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
