@@ -94,6 +94,40 @@ const SUSPICIOUS_PATHS = [
   '/log'
 ];
 
+// Backend API configuration
+const BACKEND_API_URL = 'https://consent-ledger.onrender.com/api/events';
+
+/**
+ * Sends event data to the external backend API asynchronously using fetch POST.
+ * Fully error-tolerant: failures (e.g. backend offline, network error) are caught
+ * and handled without impacting the extension's local analysis, storage, or execution.
+ *
+ * @param {Object} payload - The event data to transmit
+ * @returns {Promise<boolean>} - True if successfully dispatched, false otherwise
+ */
+async function sendEventToBackend(payload) {
+  if (!BACKEND_API_URL || !payload) return false;
+  try {
+    const response = await fetch(BACKEND_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      console.warn(`[Consent Ledger] Backend responded with HTTP status ${response.status}`);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    // Graceful error handling: ensure extension never throws or breaks if backend is offline
+    console.debug('[Consent Ledger] Backend offline or unreachable:', error.message);
+    return false;
+  }
+}
+
 // ============================================================================
 // STORAGE & SITE DATA HELPERS
 // ============================================================================
@@ -469,6 +503,7 @@ async function processTrackingRequest(tabId, initiatorHostname, requestUrl) {
 
   // Record tracker entry
   let trackerEntry = siteData.trackers.find(t => t.domain === trackerDomain);
+  const isNewTracker = !trackerEntry;
   if (!trackerEntry) {
     trackerEntry = {
       domain: trackerDomain,
@@ -487,6 +522,20 @@ async function processTrackingRequest(tabId, initiatorHostname, requestUrl) {
   } else {
     trackerEntry.requestCount++;
   }
+
+  // Send tracker detection event to backend API
+  sendEventToBackend({
+    eventType: 'TRACKER_DETECTED',
+    website: domain,
+    tracker: trackerDomain,
+    classification,
+    matchedPattern,
+    requestUrl: requestUrl.length > 300 ? requestUrl.substring(0, 297) + '...' : requestUrl,
+    consentState: siteData.consentState,
+    isNewTracker,
+    requestCount: trackerEntry.requestCount,
+    timestamp: new Date().toISOString()
+  });
 
   // Evaluate Potential Violations
   let violationType = null;
@@ -565,6 +614,22 @@ async function processTrackingRequest(tabId, initiatorHostname, requestUrl) {
         'Potential Violation Detected',
         `${alertTitle} [${evidenceRecord.evidenceId}] - ${trackerDomain}`
       );
+
+      // Send potential violation event to backend API
+      sendEventToBackend({
+        eventType: 'POTENTIAL_VIOLATION_DETECTED',
+        website: domain,
+        violationType,
+        alertTitle,
+        tracker: trackerDomain,
+        classification,
+        consentState: siteData.consentState,
+        evidenceId: evidenceRecord.evidenceId,
+        evidenceHash: evidenceRecord.evidenceHash,
+        evidence: evidenceRecord,
+        details: violationDetails,
+        timestamp: evidenceRecord.timestamp
+      });
     }
   }
 
@@ -774,6 +839,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                       'Potential Violation Detected',
                       `Potential Silent Tracking [${evidenceRecord.evidenceId}] - ${tracker.domain}`
                     );
+
+                    // Send potential violation event to backend API
+                    sendEventToBackend({
+                      eventType: 'POTENTIAL_VIOLATION_DETECTED',
+                      website: domain,
+                      violationType: VIOLATION_TYPES.SILENT_TRACKING,
+                      alertTitle: 'Potential Silent Tracking',
+                      tracker: tracker.domain,
+                      classification: tracker.classification,
+                      consentState: siteData.consentState,
+                      evidenceId: evidenceRecord.evidenceId,
+                      evidenceHash: evidenceRecord.evidenceHash,
+                      evidence: evidenceRecord,
+                      details: evidenceRecord.details,
+                      timestamp: evidenceRecord.timestamp
+                    });
                   }
                 }
               }
@@ -850,6 +931,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     'Potential Violation Detected',
                     `Potential Post-Rejection Tracking [${evidenceRecord.evidenceId}] - ${tracker.domain}`
                   );
+
+                  // Send potential violation event to backend API
+                  sendEventToBackend({
+                    eventType: 'POTENTIAL_VIOLATION_DETECTED',
+                    website: domain,
+                    violationType: VIOLATION_TYPES.POST_REJECTION_TRACKING,
+                    alertTitle: 'Potential Post-Rejection Tracking',
+                    tracker: tracker.domain,
+                    classification: tracker.classification,
+                    consentState: CONSENT_STATES.REJECTED,
+                    evidenceId: evidenceRecord.evidenceId,
+                    evidenceHash: evidenceRecord.evidenceHash,
+                    evidence: evidenceRecord,
+                    details: evidenceRecord.details,
+                    timestamp: evidenceRecord.timestamp
+                  });
                 }
               }
             }
